@@ -580,7 +580,7 @@ class App:
                 count += flow_rate / 60
                 # count += 0.055
                 self.printtxt(7, 1, "%.2f L" % (count))
-                balance = self.balance - (count * int(self.ppl))-100
+                balance = self.balance - (count * int(self.ppl))
                 if count >= (lt+0.055) or count >= (lt-0.055):
                     self.ctrv(0)
                     print("Kiasi: "+str(lt)+" Hela: " +
@@ -614,16 +614,6 @@ class App:
                 elif tt > 5:
                     print("Balance saved: "+str(balance))
                     self.sv_bal(balance, self.user_card)
-                    self.scancard()
-                    self.buzzer(0)
-                    crd, scanned = self.scancard()
-                    if scanned and crd != None:
-                        print(
-                            "Card yako ipo............................................")
-                        self.buzzer(0)
-                    else:
-                        self.ctrv(0)  # turn to 1
-                        self.buzzer(0)
                     tt = 0
                 end = time.time()
                 tt += (end - start)
