@@ -558,7 +558,7 @@ class App:
         self.lcr()
         self.printtxt(0, 0, "Kiasi: ")
         self.printtxt(0, 1, "Chotwa: ")
-        # self.ctrv(1)
+        self.ctrv(1)
         count = 0.00
         loop = True
         start = 0

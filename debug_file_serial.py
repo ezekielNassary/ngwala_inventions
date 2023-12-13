@@ -483,7 +483,7 @@ class App:
         lt = 0.0
         lt = bal / self.ppl
         self.buzzer(0)
-
+        self.ctrv(1)
         while loop:
             self.wdt.feed()
             try:
