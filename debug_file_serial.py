@@ -473,12 +473,6 @@ class App:
             self.valve(state)
 
     def dispensePaste(self, bal):
-
-        # self.lcr()
-
-        # self.printtxt(0, 0, "Kiasi: ")
-        # self.printtxt(0, 1, "Chotwa: ")
-        # self.ctrv(1)
         count = 0.00
         loop = True
         start = 0
@@ -498,10 +492,11 @@ class App:
                 print(f"The flow is: {flow_rate:.3f} Liter/min")
                 print("Kiasi: "+str(lt)+" Hela: "+str(bal))
                 count += flow_rate / 60
-                count += 0.055
+                # count += 0.055
                 print(count)
                 balance = self.balance - (count * int(self.ppl))-100
                 if count >= (lt+0.055) or count >= (lt-0.055):
+                    self.ctrv(0)
                     print("Kiasi: "+str(lt)+" Hela: " +
                           str(bal) + " Salio: "+str(balance))
                     dbbal = self.lvl-count

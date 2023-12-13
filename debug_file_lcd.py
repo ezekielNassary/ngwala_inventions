@@ -578,10 +578,11 @@ class App:
                 print(f"The flow is: {flow_rate:.3f} Liter/min")
                 self.printtxt(6, 0, "%.2f L" % (lt))
                 count += flow_rate / 60
-                count += 0.055
+                # count += 0.055
                 self.printtxt(7, 1, "%.2f L" % (count))
                 balance = self.balance - (count * int(self.ppl))-100
                 if count >= (lt+0.055) or count >= (lt-0.055):
+                    self.ctrv(0)
                     print("Kiasi: "+str(lt)+" Hela: " +
                           str(bal) + " Salio: "+str(balance))
                     self.printtxt(7, 1, "%.2f L " % (lt))
