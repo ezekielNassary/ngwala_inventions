@@ -1,9 +1,1 @@
-{
-  "ppl": 10000,
-  "transactions": [],
-  "level": 1000,
-  "calbrate": 8,
-  "api": "QA3UA87XQLKC",
-  "url": "http://ngwalainventions-a7e0b65f6e46.herokuapp.com/api/transactions/",
-  "users": []
-}
+{"ppl": 10000, "transactions": [{"uid": "1111", "api": "XAER", "amt": "20000", "bal": "100", "level": "25", "tank": "3"}], "level": 1000, "calbrate": 8, "api": "QA3UA87XQLKC", "url": "http://ngwalainventions-a7e0b65f6e46.herokuapp.com/api/transactions/", "users": []}

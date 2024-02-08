@@ -13,13 +13,12 @@ class MFRC522:
     REQALL = 0x52
     AUTHENT1A = 0x60
     AUTHENT1B = 0x61
-  
+
     PICC_ANTICOLL1 = 0x93
     PICC_ANTICOLL2 = 0x95
     PICC_ANTICOLL3 = 0x97
-  
 
-    def __init__(self, sck, mosi, miso, rst, cs,baudrate=1000000,spi_id=0):
+    def __init__(self, sck, mosi, miso, rst, cs, baudrate=1000000, spi_id=0):
 
         self.sck = Pin(sck, Pin.OUT)
         self.mosi = Pin(mosi, Pin.OUT)
@@ -29,17 +28,20 @@ class MFRC522:
 
         self.rst.value(0)
         self.cs.value(1)
-        
+
         board = uname()[0]
 
         if board == 'WiPy' or board == 'LoPy' or board == 'FiPy':
             self.spi = SPI(0)
-            self.spi.init(SPI.MASTER, baudrate=1000000, pins=(self.sck, self.mosi, self.miso))
+            self.spi.init(SPI.MASTER, baudrate=1000000,
+                          pins=(self.sck, self.mosi, self.miso))
         elif (board == 'esp8266') or (board == 'esp32'):
-            self.spi = SPI(baudrate=100000, polarity=0, phase=0, sck=self.sck, mosi=self.mosi, miso=self.miso)
+            self.spi = SPI(baudrate=100000, polarity=0, phase=0,
+                           sck=self.sck, mosi=self.mosi, miso=self.miso)
             self.spi.init()
         elif board == 'rp2':
-            self.spi = SPI(spi_id,baudrate=baudrate,sck=self.sck, mosi= self.mosi, miso= self.miso)
+            self.spi = SPI(spi_id, baudrate=baudrate,
+                           sck=self.sck, mosi=self.mosi, miso=self.miso)
         else:
             raise RuntimeError("Unsupported platform")
 
@@ -177,8 +179,8 @@ class MFRC522:
             stat = self.ERR
 
         return stat, bits
-  
-    def anticoll(self,anticolN):
+
+    def anticoll(self, anticolN):
 
         ser_chk = 0
         ser = [anticolN, 0x20]
@@ -197,114 +199,110 @@ class MFRC522:
 
         return stat, recv
 
-    
-    def PcdSelect(self, serNum,anticolN):
+    def PcdSelect(self, serNum, anticolN):
         backData = []
         buf = []
         buf.append(anticolN)
         buf.append(0x70)
-        #i = 0
-        ###xorsum=0;
+        # i = 0
+        # xorsum=0;
         for i in serNum:
             buf.append(i)
-        #while i<5:
+        # while i<5:
         #    buf.append(serNum[i])
         #    i = i + 1
         pOut = self._crc(buf)
         buf.append(pOut[0])
         buf.append(pOut[1])
-        (status, backData, backLen) = self._tocard( 0x0C, buf)
+        (status, backData, backLen) = self._tocard(0x0C, buf)
         if (status == self.OK) and (backLen == 0x18):
-            return  1
+            return 1
         else:
             return 0
-    
-    
+
     def SelectTag(self, uid):
         byte5 = 0
-        
-        #(status,puid)= self.anticoll(self.PICC_ANTICOLL1)
-        #print("uid",uid,"puid",puid)
+
+        # (status,puid)= self.anticoll(self.PICC_ANTICOLL1)
+        # print("uid",uid,"puid",puid)
         for i in uid:
             byte5 = byte5 ^ i
         puid = uid + [byte5]
-        
-        if self.PcdSelect(puid,self.PICC_ANTICOLL1) == 0:
-            return (self.ERR,[])
-        return (self.OK , uid)
-        
-    def tohexstring(self,v):
-        s="["
+
+        if self.PcdSelect(puid, self.PICC_ANTICOLL1) == 0:
+            return (self.ERR, [])
+        return (self.OK, uid)
+
+    def tohexstring(self, v):
+        s = "["
         for i in v:
             if i != v[0]:
-                s = s+ ", "
-            s=s+ "0x{:02X}".format(i)
-        s= s+ "]"
+                s = s + ", "
+            s = s + "0x{:02X}".format(i)
+        s = s + "]"
         return s
-        
-  
-            
-    
+
     def SelectTagSN(self):
-        valid_uid=[]
-        (status,uid)= self.anticoll(self.PICC_ANTICOLL1)
-        #print("Select Tag 1:",self.tohexstring(uid))
+        valid_uid = []
+        (status, uid) = self.anticoll(self.PICC_ANTICOLL1)
+        # print("Select Tag 1:",self.tohexstring(uid))
         if status != self.OK:
-            return  (self.ERR,[])
-        
-        if self.DEBUG:   print("anticol(1) {}".format(uid))
-        if self.PcdSelect(uid,self.PICC_ANTICOLL1) == 0:
-            return (self.ERR,[])
-        if self.DEBUG:   print("pcdSelect(1) {}".format(uid))
-        
-        #check if first byte is 0x88
-        if uid[0] == 0x88 :
-            #ok we have another type of card
+            return (self.ERR, [])
+
+        if self.DEBUG:
+            print("anticol(1) {}".format(uid))
+        if self.PcdSelect(uid, self.PICC_ANTICOLL1) == 0:
+            return (self.ERR, [])
+        if self.DEBUG:
+            print("pcdSelect(1) {}".format(uid))
+
+        # check if first byte is 0x88
+        if uid[0] == 0x88:
+            # ok we have another type of card
             valid_uid.extend(uid[1:4])
-            (status,uid)=self.anticoll(self.PICC_ANTICOLL2)
-            #print("Select Tag 2:",self.tohexstring(uid))
+            (status, uid) = self.anticoll(self.PICC_ANTICOLL2)
+            # print("Select Tag 2:",self.tohexstring(uid))
             if status != self.OK:
-                return (self.ERR,[])
-            if self.DEBUG: print("Anticol(2) {}".format(uid))
-            rtn =  self.PcdSelect(uid,self.PICC_ANTICOLL2)
-            if self.DEBUG: print("pcdSelect(2) return={} uid={}".format(rtn,uid))
+                return (self.ERR, [])
+            if self.DEBUG:
+                print("Anticol(2) {}".format(uid))
+            rtn = self.PcdSelect(uid, self.PICC_ANTICOLL2)
+            if self.DEBUG:
+                print("pcdSelect(2) return={} uid={}".format(rtn, uid))
             if rtn == 0:
-                return (self.ERR,[])
-            if self.DEBUG: print("PcdSelect2() {}".format(uid))
-            #now check again if uid[0] is 0x88
-            if uid[0] == 0x88 :
+                return (self.ERR, [])
+            if self.DEBUG:
+                print("PcdSelect2() {}".format(uid))
+            # now check again if uid[0] is 0x88
+            if uid[0] == 0x88:
                 valid_uid.extend(uid[1:4])
-                (status , uid) = self.anticoll(self.PICC_ANTICOLL3)
-                #print("Select Tag 3:",self.tohexstring(uid))
+                (status, uid) = self.anticoll(self.PICC_ANTICOLL3)
+                # print("Select Tag 3:",self.tohexstring(uid))
                 if status != self.OK:
-                    return (self.ERR,[])
-                if self.DEBUG: print("Anticol(3) {}".format(uid))
-                if self.MFRC522_PcdSelect(uid,self.PICC_ANTICOLL3) == 0:
-                    return (self.ERR,[])
-                if self.DEBUG: print("PcdSelect(3) {}".format(uid))
+                    return (self.ERR, [])
+                if self.DEBUG:
+                    print("Anticol(3) {}".format(uid))
+                if self.MFRC522_PcdSelect(uid, self.PICC_ANTICOLL3) == 0:
+                    return (self.ERR, [])
+                if self.DEBUG:
+                    print("PcdSelect(3) {}".format(uid))
         valid_uid.extend(uid[0:5])
         # if we are here than the uid is ok
         # let's remove the last BYTE whic is the XOR sum
-        
-        return (self.OK , valid_uid[:len(valid_uid)-1])
-        #return (self.OK , valid_uid)
-    
-    
-   
-       
-    
+
+        return (self.OK, valid_uid[:len(valid_uid)-1])
+        # return (self.OK , valid_uid)
 
     def auth(self, mode, addr, sect, ser):
         return self._tocard(0x0E, [mode, addr] + sect + ser[:4])[0]
-    
-    def authKeys(self,uid,addr,keyA=None, keyB=None):
+
+    def authKeys(self, uid, addr, keyA=None, keyB=None):
         status = self.ERR
         if keyA is not None:
             status = self.auth(self.AUTHENT1A, addr, keyA, uid)
         elif keyB is not None:
             status = self.auth(self.AUTHENT1B, addr, keyB, uid)
         return status
-       
 
     def stop_crypto1(self):
         self._cflags(0x08, 0x08)
@@ -334,43 +332,43 @@ class MFRC522:
                 stat = self.ERR
         return stat
 
-
-    def writeSectorBlock(self,uid, sector, block, data, keyA=None, keyB = None):
-        absoluteBlock =  sector * 4 + (block % 4)
-        if absoluteBlock > 63 :
+    def writeSectorBlock(self, uid, sector, block, data, keyA=None, keyB=None):
+        absoluteBlock = sector * 4 + (block % 4)
+        if absoluteBlock > 63:
             return self.ERR
         if len(data) != 16:
             return self.ERR
-        if self.authKeys(uid,absoluteBlock,keyA,keyB) != self.ERR :
+        if self.authKeys(uid, absoluteBlock, keyA, keyB) != self.ERR:
             return self.write(absoluteBlock, data)
         return self.ERR
 
-    def readSectorBlock(self,uid ,sector, block, keyA=None, keyB = None):
-        absoluteBlock =  sector * 4 + (block % 4)
-        if absoluteBlock > 63 :
+    def readSectorBlock(self, uid, sector, block, keyA=None, keyB=None):
+        absoluteBlock = sector * 4 + (block % 4)
+        if absoluteBlock > 63:
             return self.ERR, None
-        if self.authKeys(uid,absoluteBlock,keyA,keyB) != self.ERR :
+        if self.authKeys(uid, absoluteBlock, keyA, keyB) != self.ERR:
             return self.read(absoluteBlock)
         return self.ERR, None
 
-    def MFRC522_DumpClassic1K(self,uid, Start=0, End=64, keyA=None, keyB=None):
-        for absoluteBlock in range(Start,End):
-            status = self.authKeys(uid,absoluteBlock,keyA,keyB)
+    def MFRC522_DumpClassic1K(self, uid, Start=0, End=64, keyA=None, keyB=None):
+        for absoluteBlock in range(Start, End):
+            status = self.authKeys(uid, absoluteBlock, keyA, keyB)
             # Check if authenticated
-            print("{:02d} S{:02d} B{:1d}: ".format(absoluteBlock, absoluteBlock//4 , absoluteBlock % 4),end="")
-            if status == self.OK:                    
+            print("{:02d} S{:02d} B{:1d}: ".format(absoluteBlock,
+                  absoluteBlock//4, absoluteBlock % 4), end="")
+            if status == self.OK:
                 status, block = self.read(absoluteBlock)
                 if status == self.ERR:
                     break
                 else:
                     for value in block:
-                        print("{:02X} ".format(value),end="")
-                    print("  ",end="")
+                        print("{:02X} ".format(value), end="")
+                    print("  ", end="")
                     for value in block:
                         if (value > 0x20) and (value < 0x7f):
-                            print(chr(value),end="")
+                            print(chr(value), end="")
                         else:
-                            print('.',end="")
+                            print('.', end="")
                     print("")
             else:
                 break
@@ -378,6 +376,3 @@ class MFRC522:
             print("Authentication error")
             return self.ERR
         return self.OK
-        
-                
-
