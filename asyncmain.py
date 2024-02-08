@@ -1,11 +1,12 @@
-from machine import UART, I2C, Pin, WDT
-from flow_meter import FlowMeter
-from mfrc522 import MFRC522
-from pico_i2c_lcd import I2cLcd
 import utime as time
 import _thread
 import gc
 import json
+import asyncio
+from machine import UART, I2C, Pin, WDT
+from flow_meter import FlowMeter
+from mfrc522 import MFRC522
+from pico_i2c_lcd import I2cLcd
 from keypad_unit import KeypadUnit
 from menu_routine import Menu
 from display_unit import DisplayUnit
@@ -86,7 +87,7 @@ class App:
         # initial starts
         self.pump(0)
         self.led(1)
-        self.initGsm()
+        # self.initGsm()
         self.dsp.lcr()
         self.dsp.printtxt(0, 0, "     NG'WALA     ")
         self.dsp.printtxt(0, 1, "   INVENTIONS   ")
@@ -152,24 +153,6 @@ class App:
 
     def reset_pico(self, pin):
         machine.reset(pin)
-
-    def scancard(self):
-        crd = None
-        flg = False
-        try:
-            (stat, tag_type) = self.rfd.request(self.rfd.REQIDL)
-            if stat == self.rfd.OK:
-                (stat, uid) = self.rfd.SelectTagSN()
-                if stat == self.rfd.OK:
-                    self.buzzer(1)
-                    crd = str(int.from_bytes(bytes(uid), "little", False))
-                    crd = str(crd)
-                    gc.collect()
-                    flg = True
-
-        except KeyboardInterrupt:
-            print("\nkeyboard interrupt!")
-        return crd, flg
 
     async def get_gprs(self):
         stg = 0
@@ -373,6 +356,24 @@ class App:
             except KeyboardInterrupt:
                 print("\nkeyboard interrupt!")
 
+    def scancard(self):
+        crd = None
+        flg = False
+        try:
+            (stat, tag_type) = self.rfd.request(self.rfd.REQIDL)
+            if stat == self.rfd.OK:
+                (stat, uid) = self.rfd.SelectTagSN()
+                if stat == self.rfd.OK:
+                    self.buzzer(1)
+                    crd = str(int.from_bytes(bytes(uid), "little", False))
+                    crd = str(crd)
+                    gc.collect()
+                    flg = True
+
+        except KeyboardInterrupt:
+            print("\nkeyboard interrupt!")
+        return crd, flg
+
     async def run(self):
         await self.init()
         self.tsp(2)
@@ -384,7 +385,9 @@ class App:
             self.dc.acquire()
             try:
                 crd, scanned = self.scancard()
+
                 if scanned and crd != None:
+                    print(crd)
                     self.card_in = True
                     self.user_card = str(crd)
                     self.dsp.lbo()
